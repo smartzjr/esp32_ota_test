@@ -8,12 +8,12 @@
 const char* ssid = "esp32";
 const char* password = "44446666";
 
-// 云端服务器配置 - 使用您提供的七牛云链接
-const char* server_host = "tapt0dcmc.hd-bkt.clouddn.com";
-const int server_port = 80;  // HTTP端口
+// 云端服务器配置 - 使用您提供的GitHub链接
+const char* server_host = "raw.githubusercontent.com";
+const int server_port = 443;  // HTTPS端口
 
 // 固件路径 - 根据您提供的链接
-const char* firmware_path = "/firmware.bin";
+const char* firmware_path = "/smartzjr/esp32_ota_test/refs/heads/main/firmware.bin";
 
 // LED引脚
 #define LED_PIN 8
@@ -58,20 +58,23 @@ void loop() {
   }
   
   digitalWrite(LED_PIN, LOW);
-  delay(2000);
+  delay(200);
   digitalWrite(LED_PIN, HIGH);
-  delay(2000);
+  delay(200);
 }
 
 void downloadFirmware() {
-  WiFiClient client;
+  WiFiClientSecure client;
   HTTPClient http;
   
-  String url = String("http://") + server_host + firmware_path;
+  String url = String("https://") + server_host + firmware_path;
   Serial.print("📦 正在从云端下载固件: ");
   Serial.println(url);
   
-  // 增加连接超时时间
+  // 设置SSL参数
+  client.setInsecure(); // 跳过证书验证，节省资源
+  client.setTimeout(60000); // 60秒超时
+  
   http.begin(client, url);
   http.setTimeout(60000); // 60秒超时
   
@@ -85,7 +88,7 @@ void downloadFirmware() {
   int httpResponseCode = http.GET();
   
   if (httpResponseCode == 200) { // HTTP OK
-    Serial.println("✅ HTTP请求成功");
+    Serial.println("✅ HTTPS请求成功");
     
     // 获取内容长度
     int contentLength = http.getSize();
@@ -153,6 +156,12 @@ void downloadFirmware() {
           }
         }
         
+        // 检查是否已下载了所有数据
+        if (total >= contentLength) {
+          Serial.println("✅ 数据已全部下载完成");
+          break; // 已经下载完所有数据
+        }
+        
         // 检查是否需要显示定期进度（即使没有新数据）
         if ((millis() - lastProgressTime) > 30000) {
           float progress = (float)total / contentLength * 100;
@@ -191,7 +200,7 @@ void downloadFirmware() {
       Serial.printf("💡 可能是固件过大 (%d 字节) 或Flash空间不足\n", contentLength);
     }
   } else {
-    Serial.print("❌ HTTP请求失败，状态码: ");
+    Serial.print("❌ HTTPS请求失败，状态码: ");
     Serial.println(httpResponseCode);
     if(httpResponseCode == -11) {
       Serial.println("💡 提示: 状态码-11表示连接超时，可能是网络问题或服务器无响应");
