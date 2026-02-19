@@ -28,4 +28,7 @@ def copy_firmware(source, target, env):
         print(f"\n❌ 复制固件时出错: {str(e)}")
 
 # 注册构建后事件
+print(f"🔧 注册构建后动作: $BUILD_DIR/${{PROGNAME}}.bin")
 env.AddPostAction("$BUILD_DIR/${PROGNAME}.bin", copy_firmware)
+print("🔧 固件复制脚本已加载")
+print("🔧 固件复制脚本已加载")

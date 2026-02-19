@@ -58,9 +58,9 @@ void loop() {
   }
   
   digitalWrite(LED_PIN, LOW);
-  delay(200);
+  delay(2000);
   digitalWrite(LED_PIN, HIGH);
-  delay(200);
+  delay(2000);
 }
 
 void downloadFirmware() {
